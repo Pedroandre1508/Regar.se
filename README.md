@@ -12,8 +12,8 @@ Utilize rigorosamente a seguinte paleta de cores personalizada via Tailwind:
 Utilize fontes elegantes com serifa para títulos (estilo Playfair Display ou Cormorant Garamond) e sans-serif limpa para textos funcionais.
 
 A aplicação terá 2 tipos de acesso via Supabase Auth:
-1. Usuário comum ("Daniely")
-2. Administrador ("Pedro")
+1. Usuário comum
+2. Administrador
 
 Estrutura e Telas a serem implementadas:
 
@@ -53,16 +53,6 @@ Estrutura e Telas a serem implementadas:
   * Gerenciar resgates feitos pela Daniely e marcar como entregues.
 
 Configure as tabelas correspondentes no Supabase, regras de RLS e garanta transições suaves e design refinado.
-
-This project was built with [Lovable](https://lovable.dev).
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/b8c16e56-f499-4f20-8cd4-0501c7efff67).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
 
 ## Development
 

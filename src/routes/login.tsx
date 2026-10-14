@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { checkAdmin } from "@/lib/garden";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import bouquet from "@/assets/bouquet.png.asset.json";
+import bouquet from "@/assets/bouquet.png";
 
 export const Route = createFileRoute("/login")({
   ssr: false,
@@ -30,7 +30,13 @@ function LoginForm({ admin, onDone }: { admin: boolean; onDone: (isAdmin: boolea
     const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
     if (error || !data.user) {
       setBusy(false);
-      toast.error("E-mail ou senha incorretos");
+      if (error?.code === "email_not_confirmed") {
+        toast.error("Confirme o e-mail do usuário no painel do Supabase antes de entrar");
+      } else if (error?.message === "Invalid login credentials") {
+        toast.error("E-mail ou senha incorretos");
+      } else {
+        toast.error(error?.message ?? "Não foi possível entrar");
+      }
       return;
     }
     const isAdmin = await checkAdmin(data.user.id);
@@ -68,7 +74,11 @@ function LoginPage() {
     <main className="relative flex min-h-screen flex-col items-center justify-between overflow-hidden bg-forest px-6 py-10 text-cream">
       <div className="flex w-full max-w-5xl flex-1 flex-col items-center justify-center gap-10 md:flex-row md:gap-16">
         <div className="animate-rise relative aspect-square w-56 overflow-hidden rounded-full bg-cream shadow-soft md:w-96">
-          <img src={bouquet.url} alt="Buquê de tulipas" className="animate-sway size-full object-cover mix-blend-multiply" />
+          <img
+            src={bouquet}
+            alt="Buquê de tulipas"
+            className="animate-sway size-full object-contain p-2 md:p-3"
+          />
         </div>
         <div className="animate-rise flex w-full max-w-xs flex-col items-center text-center [animation-delay:.15s]">
           <h1 className="text-6xl font-light tracking-display md:text-7xl">REGAR</h1>
