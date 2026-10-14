@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      daily_phrases: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          text: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          text: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          text?: string
+        }
+        Relationships: []
+      }
       daily_submissions: {
         Row: {
           created_at: string
@@ -216,6 +237,7 @@ export type Database = {
         Args: { _delta: number; _user_id: string }
         Returns: number
       }
+      get_daily_phrase: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

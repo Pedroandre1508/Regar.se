@@ -1,2 +1,4 @@
 - Balance-changing actions (daily submission, redemptions, manual adjust) go through SECURITY DEFINER Postgres RPCs; profiles are not client-updatable, so drops can't be tampered with.
 - Signed-in pages use `ssr: false` + `requireUser()` in beforeLoad (src/lib/garden.ts) because the session lives in browser storage.
+- Rewards and harvest live on a dedicated route, leaving the garden focused on daily care.
+- Daily encouragement is read through an authenticated, security-invoker Postgres RPC with date-based hashed ordering, keeping the phrase stable throughout each São Paulo day without browser storage.
