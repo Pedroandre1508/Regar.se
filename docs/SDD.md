@@ -96,7 +96,20 @@ Relaciona usuários aos seus papéis.
 
 Há unicidade composta em `(user_id, role)`, impedindo duplicidade do mesmo papel para um usuário.
 
-### 3.3 Questionário diário
+### 3.3 Frases diárias
+
+#### `public.daily_phrases`
+
+Catálogo de frases exibidas no dashboard. O administrador pode cadastrar, ativar, inativar e excluir frases.
+
+| Campo        | Tipo          | Regra          |
+| ------------ | ------------- | -------------- |
+| `id`         | `uuid`        | PK             |
+| `text`       | `text`        | Obrigatório    |
+| `active`     | `boolean`     | Padrão `true`  |
+| `created_at` | `timestamptz` | Padrão `now()` |
+
+### 3.4 Questionário diário
 
 #### `public.questions`
 
@@ -124,7 +137,7 @@ Alternativas de cada pergunta.
 
 A tela administrativa exige pelo menos duas alternativas preenchidas. A tela de rega exige uma alternativa para cada pergunta ativa carregada.
 
-### 3.4 Recompensas e resgates
+### 3.5 Recompensas e resgates
 
 #### `public.rewards`
 
@@ -156,7 +169,7 @@ Histórico de recompensas resgatadas. O nome, emoji e custo são copiados no mom
 | `created_at`   | `timestamptz` | Padrão `now()`                                   |
 | `delivered_at` | `timestamptz` | Preenchido ao marcar entrega                     |
 
-### 3.5 Submissões diárias
+### 3.6 Submissões diárias
 
 #### `public.daily_submissions`
 
@@ -208,17 +221,22 @@ As funções são `SECURITY DEFINER`, têm `search_path = public`, não são exe
 
 Consulta usada para aplicar autorização de administrador nas policies e na RPC de ajuste de saldo.
 
+### `get_daily_phrase() -> text`
+
+Retorna uma frase ativa para o usuário autenticado. A seleção usa a data atual em `America/Sao_Paulo` combinada com o ID da frase em uma ordenação por hash, mantendo a mesma frase durante o dia e trocando-a no reset diário.
+
 ## 5. Roteamento da Aplicação
 
 A árvore tipada em [src/routeTree.gen.ts](../src/routeTree.gen.ts) registra as seguintes rotas:
 
-| Rota         | Implementação                                | Acesso                        | Responsabilidade                                                           |
-| ------------ | -------------------------------------------- | ----------------------------- | -------------------------------------------------------------------------- |
-| `/`          | [index.tsx](../src/routes/index.tsx)         | Público                       | Redireciona sempre para `/login`.                                          |
-| `/login`     | [login.tsx](../src/routes/login.tsx)         | Público                       | Login de usuário e modal de login administrativo. SSR desabilitado.        |
-| `/dashboard` | [dashboard.tsx](../src/routes/dashboard.tsx) | Usuário autenticado não-admin | Jardim, saldo, chamada diária, recompensas e inventário. SSR desabilitado. |
-| `/regar`     | [regar.tsx](../src/routes/regar.tsx)         | Usuário autenticado não-admin | Questionário diário e submissão da rega. SSR desabilitado.                 |
-| `/admin`     | [admin.tsx](../src/routes/admin.tsx)         | Usuário autenticado admin     | Saldos, perguntas, recompensas e resgates. SSR desabilitado.               |
+| Rota           | Implementação                                    | Acesso                        | Responsabilidade                                                     |
+| -------------- | ------------------------------------------------ | ----------------------------- | -------------------------------------------------------------------- |
+| `/`            | [index.tsx](../src/routes/index.tsx)             | Público                       | Redireciona sempre para `/login`.                                    |
+| `/login`       | [login.tsx](../src/routes/login.tsx)             | Público                       | Login de usuário e modal de login administrativo. SSR desabilitado.  |
+| `/dashboard`   | [dashboard.tsx](../src/routes/dashboard.tsx)     | Usuário autenticado não-admin | Saudação, saldo, frase diária e chamada para rega. SSR desabilitado. |
+| `/regar`       | [regar.tsx](../src/routes/regar.tsx)             | Usuário autenticado não-admin | Questionário diário e submissão da rega. SSR desabilitado.           |
+| `/recompensas` | [recompensas.tsx](../src/routes/recompensas.tsx) | Usuário autenticado não-admin | Recompensas disponíveis, resgates e colheita. SSR desabilitado.      |
+| `/admin`       | [admin.tsx](../src/routes/admin.tsx)             | Usuário autenticado admin     | Saldos, perguntas, recompensas, resgates e frases. SSR desabilitado. |
 
 A rota raiz possui também componentes globais de 404 e erro em [__root.tsx](../src/routes/__root.tsx).
 
@@ -253,6 +271,7 @@ As rotas não são a única camada de segurança. O PostgreSQL aplica RLS mesmo 
 - `rewards`: usuário lê recompensas ativas; admin possui acesso administrativo completo.
 - `redemptions`: usuário lê os próprios resgates; admin lê e atualiza todos.
 - `daily_submissions`: usuário lê as próprias submissões; admin lê todas.
+- `daily_phrases`: usuário autenticado lê frases ativas; admin possui acesso administrativo completo.
 
 As políticas administrativas usam `has_role(auth.uid(), 'admin')`. Alterações de saldo, submissão diária e resgate devem ocorrer pelas RPCs correspondentes, e não por mutações diretas no cliente.
 
@@ -285,11 +304,10 @@ sequenceDiagram
 Detalhes da sessão:
 
 1. [auth-attacher.ts](../src/integrations/supabase/auth-attacher.ts) obtém o `access_token` atual e o envia no header `Authorization: Bearer ...` para server functions.
-2. [auth-middleware.ts](../src/integrations/supabase/auth-middleware.ts) valida o Bearer token no lado servidor quando uma server function usa o middleware de autenticação.
-3. [start.ts](../src/start.ts) registra o attacher de autenticação como middleware global de funções e registra proteção CSRF para server functions.
-4. O cliente Supabase mantém a sessão, renova tokens automaticamente e usa o storage de preview quando necessário.
-5. [__root.tsx](../src/routes/__root.tsx) observa `onAuthStateChange`; em logout limpa o cache do React Query, e nos demais eventos invalida consultas e invalida o router.
-6. O logout em `GardenNav` cancela e limpa o cache, chama `supabase.auth.signOut()` e redireciona para `/login`.
+2. [start.ts](../src/start.ts) registra o attacher de autenticação como middleware global de funções e registra proteção CSRF para server functions.
+3. O cliente Supabase mantém a sessão em `localStorage` e renova tokens automaticamente.
+4. [__root.tsx](../src/routes/__root.tsx) observa `onAuthStateChange`; em logout limpa o cache do React Query, e nos demais eventos invalida consultas e invalida o router.
+5. O logout em `GardenNav` cancela e limpa o cache, chama `supabase.auth.signOut()` e redireciona para `/login`.
 
 ## 8. Fluxos Funcionais Principais
 
@@ -307,11 +325,11 @@ Detalhes da sessão:
 
 ### 8.2 Resgate de recompensa
 
-1. O dashboard carrega somente recompensas ativas.
+1. O usuário acessa `/recompensas`, que carrega somente recompensas ativas.
 2. O botão é desabilitado quando o saldo visual é menor que o custo.
 3. O cliente chama `redeem_reward`.
 4. O banco valida novamente que a recompensa está ativa e que há saldo suficiente, trava o perfil, debita as gotas e cria o resgate.
-5. O dashboard atualiza saldo e inventário via React Query e Realtime.
+5. A tela de recompensas atualiza saldo e colheita via React Query e Realtime.
 
 ### 8.3 Administração
 
@@ -324,12 +342,13 @@ O administrador acessa `/admin` e pode:
 - Criar recompensas com emoji, nome, descrição e custo.
 - Ativar, inativar ou excluir recompensas.
 - Visualizar todos os resgates e marcar resgates pendentes como `delivered`, preenchendo `delivered_at`.
+- Criar, ativar, inativar e excluir frases usadas no dashboard.
 
 ## 9. Atualização de Dados e Estado da Interface
 
-- O React Query mantém consultas separadas para perfil, submissão do dia, perguntas, recompensas e inventário.
+- O React Query mantém consultas separadas para perfil, submissão do dia, frase diária, perguntas, recompensas e inventário.
 - Após mutations, as queries afetadas são invalidadas para refletir o estado do banco.
-- O dashboard assina Realtime para alterações no próprio `profiles` e `redemptions`.
+- O dashboard assina Realtime para alterações no próprio `profiles`; a tela de recompensas assina alterações em `profiles` e `redemptions`.
 - O painel administrativo assina Realtime para alterações em `profiles` e `redemptions`.
 - A publicação realtime inclui `profiles` e `redemptions`; perguntas, opções e recompensas são atualizadas por invalidação após ações administrativas.
 

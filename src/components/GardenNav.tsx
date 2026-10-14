@@ -24,6 +24,7 @@ export function GardenNav({ admin = false }: { admin?: boolean }) {
           <>
             <Link to="/dashboard" className={link} activeProps={{ className: "text-tulip" }}>JARDIM</Link>
             <Link to="/regar" className={link} activeProps={{ className: "text-tulip" }}>REGAR</Link>
+            <Link to="/recompensas" className={link} activeProps={{ className: "text-tulip" }}>RECOMPENSAS</Link>
           </>
         )}
         <button onClick={out} className={link}>SAIR</button>

@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { requireUser, errMsg } from "@/lib/garden";
 import { GardenNav } from "@/components/GardenNav";
 import { DropIcon } from "@/components/Drops";
+import { PhrasesTab } from "@/components/PhrasesTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 
@@ -79,12 +80,16 @@ function Admin() {
           <TabsList className="mx-auto mb-8 flex w-fit bg-muted">
             <TabsTrigger value="questions">Perguntas Diárias</TabsTrigger>
             <TabsTrigger value="rewards">Recompensas</TabsTrigger>
+            <TabsTrigger value="phrases">Frases do Dia</TabsTrigger>
           </TabsList>
           <TabsContent value="questions">
             <QuestionsTab />
           </TabsContent>
           <TabsContent value="rewards">
             <RewardsTab adminId={user.id} />
+          </TabsContent>
+          <TabsContent value="phrases">
+            <PhrasesTab />
           </TabsContent>
         </Tabs>
       </main>

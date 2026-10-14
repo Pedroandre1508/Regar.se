@@ -1,9 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { requireUser, spNow, errMsg } from "@/lib/garden";
+import { requireUser, spNow } from "@/lib/garden";
 import { GardenNav } from "@/components/GardenNav";
 import { DropIcon } from "@/components/Drops";
 
@@ -39,14 +38,13 @@ function Dashboard() {
     queryFn: async () =>
       (await supabase.from("daily_submissions").select("id,total").eq("user_id", user.id).eq("day", clock.day).maybeSingle()).data,
   });
-  const rewards = useQuery({
-    queryKey: ["rewards"],
-    queryFn: async () => (await supabase.from("rewards").select("*").eq("active", true).order("cost")).data ?? [],
-  });
-  const inventory = useQuery({
-    queryKey: ["inventory", user.id],
-    queryFn: async () =>
-      (await supabase.from("redemptions").select("*").eq("user_id", user.id).order("created_at", { ascending: false })).data ?? [],
+  const dailyPhrase = useQuery({
+    queryKey: ["daily-phrase", clock.day],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_daily_phrase");
+      if (error) throw error;
+      return data;
+    },
   });
 
   useEffect(() => {
@@ -55,30 +53,19 @@ function Dashboard() {
       .on("postgres_changes", { event: "*", schema: "public", table: "profiles", filter: `id=eq.${user.id}` }, () =>
         qc.invalidateQueries({ queryKey: ["profile", user.id] }),
       )
-      .on("postgres_changes", { event: "*", schema: "public", table: "redemptions", filter: `user_id=eq.${user.id}` }, () =>
-        qc.invalidateQueries({ queryKey: ["inventory", user.id] }),
-      )
       .subscribe();
     return () => {
       supabase.removeChannel(ch);
     };
   }, [user.id, qc]);
 
-  const redeem = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.rpc("redeem_reward", { _reward_id: id });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success("Colhido! Seu miminho está a caminho 🌷");
-      qc.invalidateQueries({ queryKey: ["profile", user.id] });
-      qc.invalidateQueries({ queryKey: ["inventory", user.id] });
-    },
-    onError: (e) => toast.error(errMsg(e)),
-  });
-
   const balance = profile.data?.drops ?? 0;
-  const name = profile.data?.display_name || "Daniely";
+  const nomeDoPerfil = profile.data?.display_name?.trim();
+  const nomeDoMetadata =
+    typeof user.user_metadata?.["display_name"] === "string"
+      ? user.user_metadata["display_name"].trim()
+      : "";
+  const nome = nomeDoPerfil || nomeDoMetadata || user.email?.split("@")[0] || "jardineira";
   const resting = clock.hour < 8;
   const done = !!today.data;
 
@@ -87,7 +74,7 @@ function Dashboard() {
       <header className="bg-forest pb-16 text-cream">
         <GardenNav />
         <div className="animate-rise mx-auto max-w-5xl px-6 pt-8 text-center">
-          <h1 className="text-5xl italic md:text-6xl">Olá, {name}</h1>
+          <h1 className="text-5xl italic md:text-6xl">Olá, {nome}</h1>
           <div className="mt-6 inline-flex items-center gap-3 rounded-full border border-cream/15 bg-leaf/40 px-6 py-3">
             <DropIcon className="size-6 text-tulip" />
             <span className="font-serif text-2xl tracking-display md:text-3xl">
@@ -98,6 +85,13 @@ function Dashboard() {
       </header>
 
       <main className="mx-auto -mt-10 max-w-5xl space-y-14 px-6 pb-20">
+        <section className="animate-rise mx-auto max-w-2xl rounded-2xl border border-leaf/15 bg-cream px-8 py-10 text-center shadow-soft">
+          <p className="text-xs tracking-display text-leaf/70">UMA FRASE PARA HOJE</p>
+          <blockquote className="mt-4 font-serif text-3xl italic leading-tight text-forest md:text-4xl">
+            {dailyPhrase.data ? `“${dailyPhrase.data}”` : "Seu cuidado de hoje também conta."}
+          </blockquote>
+        </section>
+
         <section className="animate-rise rounded-2xl bg-leaf p-8 text-center text-cream shadow-soft">
           <p className="text-xs tracking-display text-cream/60">CHAMADA DIÁRIA</p>
           {done ? (
@@ -121,71 +115,7 @@ function Dashboard() {
             </div>
           )}
         </section>
-
-        <section>
-          <SectionTitle title="Canteiro de Recompensas" />
-          {rewards.data?.length === 0 && <Empty text="Nenhuma recompensa plantada ainda." />}
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {rewards.data?.map((r, i) => {
-              const ok = balance >= r.cost;
-              return (
-                <article
-                  key={r.id}
-                  style={{ animationDelay: `${i * 60}ms` }}
-                  className="animate-rise flex flex-col items-center rounded-2xl bg-leaf p-5 text-center text-cream shadow-soft transition hover:-translate-y-1"
-                >
-                  <div className="text-4xl">{r.emoji}</div>
-                  <h3 className="mt-2 text-xl leading-tight">{r.name}</h3>
-                  {r.description && <p className="mt-1 text-xs text-cream/65">{r.description}</p>}
-                  <p className="mt-3 flex items-center gap-1 text-sm">
-                    <DropIcon className="size-4 text-tulip" /> {r.cost} gotas
-                  </p>
-                  <button
-                    disabled={!ok || redeem.isPending}
-                    onClick={() => redeem.mutate(r.id)}
-                    className="mt-4 w-full rounded-full bg-tulip py-2 text-xs tracking-display text-cream transition hover:brightness-110 disabled:bg-olive/60 disabled:text-cream/70"
-                  >
-                    {ok ? "RESGATAR" : "FALTAM GOTAS"}
-                  </button>
-                </article>
-              );
-            })}
-          </div>
-        </section>
-
-        <section>
-          <SectionTitle title="Minha Colheita" />
-          {inventory.data?.length === 0 && <Empty text="Sua cesta ainda está vazia." />}
-          <ul className="divide-y divide-border overflow-hidden rounded-2xl border bg-cream">
-            {inventory.data?.map((r) => (
-              <li key={r.id} className="flex items-center gap-4 px-5 py-4">
-                <span className="text-2xl">{r.reward_emoji}</span>
-                <div className="flex-1">
-                  <p className="font-serif text-lg">{r.reward_name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {new Date(r.created_at).toLocaleDateString("pt-BR")} · {r.cost} gotas
-                  </p>
-                </div>
-                <span
-                  className={
-                    "rounded-full px-3 py-1 text-xs " +
-                    (r.status === "delivered" ? "bg-leaf text-cream" : "bg-tulip/10 text-tulip")
-                  }
-                >
-                  {r.status === "delivered" ? "Concluído" : "Aguardando miminho"}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </section>
       </main>
     </div>
   );
-}
-
-function SectionTitle({ title }: { title: string }) {
-  return <h2 className="mb-6 text-center text-3xl tracking-wide text-tulip md:text-4xl">{title}</h2>;
-}
-function Empty({ text }: { text: string }) {
-  return <p className="text-center font-serif italic text-muted-foreground">{text}</p>;
 }
