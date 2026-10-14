@@ -8,3 +8,6 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Balance-changing actions (daily submission, redemptions, manual adjust) go through SECURITY DEFINER Postgres RPCs; profiles are not client-updatable, so drops can't be tampered with.
+- Signed-in pages use `ssr: false` + `requireUser()` in beforeLoad (src/lib/garden.ts) because the session lives in browser storage.
