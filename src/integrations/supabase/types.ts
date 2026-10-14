@@ -14,16 +14,220 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      daily_submissions: {
+        Row: {
+          created_at: string
+          day: string
+          id: string
+          total: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          day: string
+          id?: string
+          total: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          day?: string
+          id?: string
+          total?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string
+          drops: number
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string
+          drops?: number
+          id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          drops?: number
+          id?: string
+        }
+        Relationships: []
+      }
+      question_options: {
+        Row: {
+          id: string
+          label: string
+          points: number
+          position: number
+          question_id: string
+        }
+        Insert: {
+          id?: string
+          label: string
+          points?: number
+          position?: number
+          question_id: string
+        }
+        Update: {
+          id?: string
+          label?: string
+          points?: number
+          position?: number
+          question_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_options_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      questions: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          position: number
+          text: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          position?: number
+          text: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          position?: number
+          text?: string
+        }
+        Relationships: []
+      }
+      redemptions: {
+        Row: {
+          cost: number
+          created_at: string
+          delivered_at: string | null
+          id: string
+          reward_emoji: string
+          reward_id: string | null
+          reward_name: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          cost: number
+          created_at?: string
+          delivered_at?: string | null
+          id?: string
+          reward_emoji?: string
+          reward_id?: string | null
+          reward_name: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          cost?: number
+          created_at?: string
+          delivered_at?: string | null
+          id?: string
+          reward_emoji?: string
+          reward_id?: string | null
+          reward_name?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "redemptions_reward_id_fkey"
+            columns: ["reward_id"]
+            isOneToOne: false
+            referencedRelation: "rewards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rewards: {
+        Row: {
+          active: boolean
+          cost: number
+          created_at: string
+          description: string
+          emoji: string
+          id: string
+          name: string
+        }
+        Insert: {
+          active?: boolean
+          cost: number
+          created_at?: string
+          description?: string
+          emoji?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          active?: boolean
+          cost?: number
+          created_at?: string
+          description?: string
+          emoji?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      admin_adjust_drops: {
+        Args: { _delta: number; _user_id: string }
+        Returns: number
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      redeem_reward: { Args: { _reward_id: string }; Returns: undefined }
+      submit_daily: { Args: { _option_ids: string[] }; Returns: number }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +354,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const
