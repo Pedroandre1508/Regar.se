@@ -57,7 +57,7 @@ function RegarPage() {
     setBusy(true);
     const { data, error } = await supabase.rpc("submit_daily", { _option_ids: Object.values(answers) });
     setBusy(false);
-    if (error) return toast.error(errMsg(error));
+    if (error) { toast.error(errMsg(error)); return; }
     setResult(data ?? 0);
     qc.invalidateQueries({ queryKey: ["profile", user.id] });
     qc.invalidateQueries({ queryKey: ["submission", user.id, day] });

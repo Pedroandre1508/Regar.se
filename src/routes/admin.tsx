@@ -99,7 +99,7 @@ function BalanceCard({ id, name, drops }: { id: string; name: string; drops: num
     const n = parseInt(delta, 10);
     if (!n) return;
     const { error } = await supabase.rpc("admin_adjust_drops", { _user_id: id, _delta: n });
-    if (error) return toast.error(errMsg(error));
+    if (error) { toast.error(errMsg(error)); return; }
     setDelta("");
     toast.success("Saldo ajustado");
     qc.invalidateQueries({ queryKey: ["gardeners"] });
@@ -146,17 +146,17 @@ function QuestionsTab() {
   async function create(e: FormEvent) {
     e.preventDefault();
     const clean = opts.filter((o) => o.label.trim());
-    if (!text.trim() || clean.length < 2) return toast.error("Informe a pergunta e ao menos 2 opções");
+    if (!text.trim() || clean.length < 2) { toast.error("Informe a pergunta e ao menos 2 opções"); return; }
     const { data: q, error } = await supabase
       .from("questions")
       .insert({ text: text.trim().slice(0, 300), position: (questions.data?.length ?? 0) + 1 })
       .select()
       .single();
-    if (error || !q) return toast.error(errMsg(error));
+    if (error || !q) { toast.error(errMsg(error)); return; }
     const { error: e2 } = await supabase.from("question_options").insert(
       clean.map((o, i) => ({ question_id: q.id, label: o.label.trim().slice(0, 200), points: parseInt(o.points, 10) || 0, position: i })),
     );
-    if (e2) return toast.error(errMsg(e2));
+    if (e2) { toast.error(errMsg(e2)); return; }
     setText("");
     setOpts([
       { label: "", points: "10" },
@@ -263,14 +263,14 @@ function RewardsTab({ adminId: _ }: { adminId: string }) {
   async function create(e: FormEvent) {
     e.preventDefault();
     const cost = parseInt(form.cost, 10);
-    if (!form.name.trim() || !(cost > 0)) return toast.error("Nome e custo (maior que 0) são obrigatórios");
+    if (!form.name.trim() || !(cost > 0)) { toast.error("Nome e custo (maior que 0) são obrigatórios"); return; }
     const { error } = await supabase.from("rewards").insert({
       name: form.name.trim().slice(0, 80),
       description: form.description.trim().slice(0, 200),
       cost,
       emoji: form.emoji.trim().slice(0, 8) || "🌷",
     });
-    if (error) return toast.error(errMsg(error));
+    if (error) { toast.error(errMsg(error)); return; }
     setForm({ name: "", description: "", cost: "", emoji: "🌷" });
     toast.success("Recompensa plantada");
     qc.invalidateQueries({ queryKey: ["admin-rewards"] });
@@ -290,7 +290,7 @@ function RewardsTab({ adminId: _ }: { adminId: string }) {
       .from("redemptions")
       .update({ status: "delivered", delivered_at: new Date().toISOString() })
       .eq("id", id);
-    if (error) return toast.error(errMsg(error));
+    if (error) { toast.error(errMsg(error)); return; }
     toast.success("Marcado como entregue 💐");
     qc.invalidateQueries({ queryKey: ["all-redemptions"] });
   }
