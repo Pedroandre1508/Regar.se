@@ -1,0 +1,3 @@
+- [ ] Move rewards and harvest into a separate rewards page and navigation tab.
+- [ ] Store uplifting phrases and choose a stable random phrase each São Paulo day.
+- [ ] Let Pedro manage phrases and validate signed-in views.
