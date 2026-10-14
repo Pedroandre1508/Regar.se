@@ -15,6 +15,13 @@
       "when": 1792008549650,
       "tag": "0001_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792009997278,
+      "tag": "0002_daily_encouragement_phrases",
+      "breakpoints": true
     }
   ]
 }
