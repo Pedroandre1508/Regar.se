@@ -1,4 +1,4 @@
-# Floral Selfcare Tracker
+# regar.se
 
 Crie uma aplicação web responsiva chamada "Regar", inspirada no conceito de autocuidado diário e cultivo pessoal através de uma metáfora de flores e plantas.
 
