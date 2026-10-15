@@ -23,9 +23,9 @@ Estrutura e Telas a serem implementadas:
 - Botão principal "ENTRAR" (color-tulip com texto claro) para acesso do usuário.
 - Link discreto no rodapé "Acesso ADM" que abre modal ou tela de login para o Pedro.
 
-2. DASHBOARD DA DANIELY (/dashboard):
+2. DASHBOARD (/dashboard):
 - Visual em dois tons (seção superior em color-forest e corpo principal em color-cream).
-- Header exibindo: "Olá, Daniely" e um contador visual proeminente: "GOTAS D'ÁGUA: [saldo]".
+- Header exibindo: "Olá, user" e um contador visual proeminente: "GOTAS D'ÁGUA: [saldo]".
 - Card de Chamada Diária:
   * O formulário só pode ser respondido entre 08:00 e 23:59.
   * Se estiver no horário e ela ainda não respondeu hoje, exibir botão de destaque "Regar meu dia".
@@ -40,17 +40,17 @@ Estrutura e Telas a serem implementadas:
 3. TELA DE REGA DIÁRIA (/regar):
 - Exibe as perguntas diárias cadastradas pelo ADM em formato de cartões de múltipla escolha.
 - Cada pergunta possui alternativas onde cada opção soma ou subtrai Gotas (ex: Opção A: +10 gotas, Opção B: +3 gotas, Opção C: -10 gotas).
-- Ao final, calcular o total, somar ao saldo da Daniely, registrar o envio do dia para travar novos acessos até o reset e exibir um resumo animado de pontos ganhos.
+- Ao final, calcular o total, somar ao saldo do user, registrar o envio do dia para travar novos acessos até o reset e exibir um resumo animado de pontos ganhos.
 
 4. PAINEL DO ADMINISTRADOR (/admin):
 - Acesso restrito via role ou email do Pedro.
-- Visor em tempo real do saldo de Gotas da Daniely com botão para ajuste manual caso necessário.
+- Visor em tempo real do saldo de Gotas do user com botão para ajuste manual caso necessário.
 - Aba "Perguntas Diárias":
   * Formulário para cadastrar pergunta e múltiplas opções com suas respectivas pontuações.
   * Lista de perguntas com toggle para Ativar/Desativar e botão de excluir.
 - Aba "Recompensas":
   * Cadastrar novos prêmios, definir o valor em Gotas e descrição.
-  * Gerenciar resgates feitos pela Daniely e marcar como entregues.
+  * Gerenciar resgates feitos pelo user e marcar como entregues.
 
 Configure as tabelas correspondentes no Supabase, regras de RLS e garanta transições suaves e design refinado.
 
